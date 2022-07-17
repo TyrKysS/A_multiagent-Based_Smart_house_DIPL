@@ -1,4 +1,4 @@
-package osu.sladcik.agents.fire;
+package osu.sladcik.agents.motionSensor;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -9,49 +9,40 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
 import osu.Agents;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
-public class FireAgent extends Agent {
+public class MotionSensorAgent extends Agent {
+
+    public static boolean sendMsg = false;
     private AMSAgentDescription[] agents;
-    private String eventStart = "";
-    private String actualTime = "";
+
     @Override
     protected void setup() {
-        agents = null;
         addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                // Generování aktuálního času
-                GregorianCalendar calendar = new GregorianCalendar();
-                int actualHour = calendar.get(Calendar.HOUR);
-                int actualMinutes = calendar.get(Calendar.MINUTE);
-                actualTime = actualHour+":"+actualMinutes;
-                if (FireFrame.outputAlarm == 1000){
-                    sendAlarmToAllAgents();
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                // Pokud byla nastavena udlást a nastala hodina události, aktivuj událost
-                if (eventStart.equals(actualTime)){
-                    FireFrame.inputValue = 1;
+                if (sendMsg){
+                    sendMsgToAllAgents();
+                    System.out.println("send msg");
+                    sendMsg = false;
                 }
             }
         });
     }
 
-    // Odeslat polach všem přítomným agentům
-    private void sendAlarmToAllAgents(){
+    private void sendMsgToAllAgents(){
         ACLMessage msg = new ACLMessage(ACLMessage.FAILURE);
-        msg.setContent("fire");
+        msg.setContent("motion");
         List<String> listOfAgents = findAgents();
         for (String agent : listOfAgents) {
             msg.addReceiver(new AID(agent, AID.ISLOCALNAME));
         }
         send(msg);
     }
+
     private List<String> findAgents(){
         List<String> tmpList = new ArrayList<>();
         List<String> ret = new ArrayList<>();

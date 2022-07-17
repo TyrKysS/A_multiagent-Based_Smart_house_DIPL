@@ -9,23 +9,19 @@ import jade.wrapper.StaleProxyException;
 import osu.sladcik.resources.ReadFromFile;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
 import java.io.FileNotFoundException;
 
 public class FireFrame extends JFrame {
     private JPanel firePanel;
-    private JButton alarmStateBtn;
-    private JButton alarmStatusBtn;
-    private JLabel alarmState;
-    private JLabel alarmStatus;
-    private JLabel alarmStatusLabel;
+    private JTextField inputField;
+    private JButton btn;
+    private JLabel output;
 
-    public static int alarmIsOn = 0;
-    public static int alarmIsRinging = 0;
-    public static boolean eventStart = false;
+    public static int inputValue = 700;
+    public static int outputAlarm = 0;
 
-    private int output;
+    private int outputLed;
 
     // GUI
     FireFrame() {
@@ -34,42 +30,14 @@ public class FireFrame extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
         setSize(340,200);
-        alarmState.setText("false");
-        alarmStateBtn.setText("Aktivovat čidlo");
-        alarmStatus.setText("false");
-        alarmStatusBtn.setText("spustit poplach");
         updateGui();
+        output.setOpaque(true);
+        output.setBackground(Color.white);
 
-        alarmStatusBtn.addActionListener(e -> {
-            switch (alarmIsRinging){
-                case 0:
-                    alarmIsRinging = 1;
-                    alarmStatus.setText("true");
-                    alarmStatusBtn.setText("Vypnout poplach");
-                    break;
-                case 1:
-                    alarmIsRinging = 0;
-                    alarmStatus.setText("false");
-                    alarmStatusBtn.setText("spustit poplach");
-                    break;
-            }
-            System.out.println(alarmIsRinging);
+        btn.addActionListener(e -> {
+            inputValue = Integer.parseInt(inputField.getText());
         });
-        alarmStateBtn.addActionListener(e -> {
-            switch (alarmIsOn){
-                case 0:
-                    alarmIsOn = 1;
-                    alarmState.setText("true");
-                    alarmStateBtn.setText("Deaktivovat čidlo");
-                    break;
-                case 1:
-                    alarmIsOn = 0;
-                    alarmState.setText("false");
-                    alarmStateBtn.setText("Aktivovat čidlo");
-                    break;
-            }
-            System.out.println(alarmIsOn);
-        });
+
     }
 
     // po stisku tlačítka aktualizace GUI
@@ -80,46 +48,33 @@ public class FireFrame extends JFrame {
                 matrix = ReadFromFile.readMatrixFromFile("fireSettings.txt", 4, 3);
             } catch (FileNotFoundException e) {
                 System.out.println("Soubor s nastavením nebyl nalezen, využívá se výchozí nastavení");
-                matrix = new int[][]{
-                        // alarmIsOn    alarmIsRinging   output
-                        {   0,               0,              0  },
-                        {   0,               1,              0  },
-                        {   1,               0,              1  },
-                        {   1,               1,              2  }
+
+                matrix = new int[][] {
+                    //            senzor plamene          LED        Bzučák
+                    //     vstup_min     vstup_max      výstup      výstup2
+                    {     0,            100,            1,       1000    },
+                    {   100,            300,            1,          0    },
+                    {   300,           1000,            0,          0    }
                 };
             }
             while(true){
                 for (int[] ints : matrix) {
                     for (int j = 0; j < ints.length; j++) {
-                        if (ints[0] == alarmIsOn && ints[1] == alarmIsRinging) {
-                            output = ints[2];
-                            //System.out.print(ints[2]+" ");
+                        if (ints[0] <= inputValue && ints[1] > inputValue) {
+                            outputLed = ints[2];
+                            outputAlarm = ints[3];
                             break;
                         }
                     }
                 }
-                switch (output){
-                    case 0:
-                        alarmIsRinging = 0;
-                        alarmStatus.setText("false");
-                        alarmStatusBtn.setText("spustit poplach");
-                        alarmStatusBtn.setVisible(false);
-                        alarmStatus.setVisible(false);
-                        alarmStatusLabel.setVisible(false);
-                        break;
-                    case 1:
-                    case 2:
-                        alarmStatusBtn.setVisible(true);
-                        alarmStatus.setVisible(true);
-                        alarmStatusLabel.setVisible(true);
-                        break;
-                }
 
-                if (eventStart){
-                    output = 1;
-                    alarmState.setText("true");
-                    alarmStateBtn.setText("Deaktivovat čidlo");
+                if (outputLed == 1){
+                    output.setBackground(Color.red);
+                } else {
+                    output.setBackground(Color.white);
                 }
+                output.setText(String.valueOf(outputAlarm));
+
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
@@ -132,6 +87,7 @@ public class FireFrame extends JFrame {
     }
 
     public static void main(String[] args) {
+        FireFrame fireFrame = new FireFrame();
         Runtime rt = Runtime.instance();
         Profile p = new ProfileImpl();
         p.setParameter(Profile.MAIN_HOST, "localhost");
@@ -146,6 +102,5 @@ public class FireFrame extends JFrame {
             e.printStackTrace();
         }
 
-        FireFrame fireFrame = new FireFrame();
     }
 }
