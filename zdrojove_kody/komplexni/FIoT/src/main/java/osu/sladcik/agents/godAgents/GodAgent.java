@@ -128,10 +128,19 @@ public class GodAgent extends Agent {
         JSONObject agentObject3 = new JSONObject();
         agentObject3.put("agent", agentDetails3);
 
+        JSONObject agentDetails4 = new JSONObject();
+        agentDetails4.put("name", "Motion");
+        agentDetails4.put("sensors", "1");
+        agentDetails4.put("actuators", "0");
+
+        JSONObject agentObject4 = new JSONObject();
+        agentObject4.put("agent", agentDetails4);
+
         JSONArray agentList = new JSONArray();
         agentList.add(agentObject);
         agentList.add(agentObject2);
         agentList.add(agentObject3);
+        agentList.add(agentObject4);
         if (!file.exists()){
             try (FileWriter fileWriter = new FileWriter(file)) {
                 fileWriter.write(agentList.toJSONString());

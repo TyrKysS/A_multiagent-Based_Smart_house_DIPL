@@ -13,19 +13,12 @@ import java.util.*;
 
 public class FireAgent extends Agent {
     private AMSAgentDescription[] agents;
-    private String eventStart = "";
-    private String actualTime = "";
     @Override
     protected void setup() {
         agents = null;
         addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                // Generování aktuálního času
-                GregorianCalendar calendar = new GregorianCalendar();
-                int actualHour = calendar.get(Calendar.HOUR);
-                int actualMinutes = calendar.get(Calendar.MINUTE);
-                actualTime = actualHour+":"+actualMinutes;
                 if (FireFrame.outputAlarm == 1000){
                     sendAlarmToAllAgents();
                 }
@@ -33,10 +26,6 @@ public class FireAgent extends Agent {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                }
-                // Pokud byla nastavena udlást a nastala hodina události, aktivuj událost
-                if (eventStart.equals(actualTime)){
-                    FireFrame.inputValue = 1;
                 }
             }
         });

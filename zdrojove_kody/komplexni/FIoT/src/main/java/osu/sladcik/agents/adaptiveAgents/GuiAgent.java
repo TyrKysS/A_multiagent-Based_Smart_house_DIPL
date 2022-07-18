@@ -30,25 +30,24 @@ public class GuiAgent extends Agent {
         addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                String btnType, btnStatus;
                 ACLMessage msg = receive();
-                if (msg != null){
+
+                if (msg != null && msg.getContent().contains("lightStatus")){
                     String[] message = msg.getContent().split(";");
-                    btnType = message[1];
-                    btnStatus = message[2];
-                    switch (btnType){
-                        case "lightStatus":
-                            sendMessage("lightStatus;"+btnStatus);
-                            break;
-                        case "event":
-                            //TODO umožnit rozeznat co je lightStatus a co event
-                            sendMessage("event;"+btnStatus);
-                            break;
-                    }
+
                     ACLMessage confirmMsg = new ACLMessage(ACLMessage.AGREE);
                     confirmMsg.addReceiver(new AID(message[0], AID.ISLOCALNAME));
-                    confirmMsg.setContent(getLocalName()+";accept;1");
+                    confirmMsg.setContent(getLocalName()+";accept;"+message[2]);
+                    send(confirmMsg);
+                    sendMessage("lightStatus;"+message[2]);
+                }
+                if (msg != null && (msg.getContent().contains("fire") || msg.getContent().contains("motion"))){
+                    String[] message = msg.getContent().split(";");
 
+                    ACLMessage confirmMsg = new ACLMessage(ACLMessage.AGREE);
+                    confirmMsg.addReceiver(new AID("Gui", AID.ISLOCALNAME));
+                    confirmMsg.setContent(getLocalName()+";"+message[1]);
+                    send(confirmMsg);
                 }
             }
         });

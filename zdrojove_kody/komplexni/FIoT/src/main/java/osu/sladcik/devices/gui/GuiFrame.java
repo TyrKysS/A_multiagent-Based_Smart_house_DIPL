@@ -20,23 +20,13 @@ public class GuiFrame extends JFrame {
     public static String msg;
     public static int output;
     private JPanel guiPanel;
-    private JLabel timerLabel;
-    private JSlider timeEventSlider;
-    private JButton setTimeEventBtn;
-    private JLabel timeEventSliderText;
-    private JButton lightBtn;
     private JLabel lightLabel;
-    private JLabel eventlabel;
-    private JLabel timerDescription;
-    private JCheckBox checkLight;
-    private JCheckBox checkFire;
-    public static boolean confirmLight = false;
-    public static boolean lighter = false;
-    public static boolean isBtnPressed = false;
-    public static String actualTime;
-    public static boolean isEvent = false;
-    public static String eventTime = "";
-    public static List<String> targetAgents;
+    private JLabel fireLabel;
+    private JLabel sensorLabel;
+    private int lightState = 0;
+    private JButton lightBtn;
+    public static boolean sensorState = false;
+    public static boolean fireState = false;
 
     GuiFrame() {
         setContentPane(guiPanel);
@@ -44,44 +34,24 @@ public class GuiFrame extends JFrame {
         setSize(450,300);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
-        timeEventSlider.setMinimum(1);
-        timeEventSlider.setMaximum(1440);
         updateGui();
 
-        lightBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                msg = "lightStatus;1";
-                notifyAgent = true;
+        lightBtn.addActionListener(e -> {
+            if (lightState == 0){
+                lightState = 1;
+                lightBtn.setText("Zhasnout osvětlení");
+            } else {
+                lightState = 0;
+                lightBtn.setText("Rozsvítit osvětlení");
             }
-        });
-
-        checkLight.addActionListener(e -> {});
-        checkFire.addActionListener(e -> {});
-
-        setTimeEventBtn.addActionListener(e -> {
-            if (!(timeEventSliderText.getText().isEmpty() || timeEventSliderText.getText().isBlank())){
-                targetAgents = new ArrayList<>();
-                if (checkLight.isSelected()){
-                    targetAgents.add("light");
-                    System.out.println(timeEventSliderText.getText());
-                    eventTime = timeEventSliderText.getText();
-                    msg = "event;"+timeEventSliderText.getText();
-                    notifyAgent = true;
-                }
-
-                if (checkFire.isSelected()){
-                    targetAgents.add("Fire");
-                    System.out.println(timeEventSliderText.getText());
-                    eventTime = timeEventSliderText.getText();
-                    msg = "event;"+timeEventSliderText.getText();
-                    notifyAgent = true;
-                }
-            }
+            msg = "lightStatus;"+lightState;
+            notifyAgent = true;
         });
     }
 
     public static void main(String[] args) {
+        GuiFrame frame = new GuiFrame();
+
         Runtime rt = Runtime.instance();
         Profile p = new ProfileImpl();
         p.setParameter(Profile.MAIN_HOST, "localhost");
@@ -95,18 +65,30 @@ public class GuiFrame extends JFrame {
         } catch (StaleProxyException e) {
             e.printStackTrace();
         }
-
-        GuiFrame frame = new GuiFrame();
     }
-
     private void updateGui() {
         Thread thread = new Thread(() -> {
             while (true){
-                timerLabel.setText(actualTime);
-                int t = timeEventSlider.getValue();
-                int hours = t / 60;
-                int minutes = t % 60;
-                timeEventSliderText.setText(hours+":"+minutes);
+                if (sensorState){
+                    sensorLabel.setText("Detekován pohyb");
+                    sensorState = false;
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if (fireState) {
+                    fireLabel.setText("Požár je aktivní");
+                    fireState = false;
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    fireLabel.setText("");
+                    sensorLabel.setText("");
+                }
             }
         });
         thread.start();

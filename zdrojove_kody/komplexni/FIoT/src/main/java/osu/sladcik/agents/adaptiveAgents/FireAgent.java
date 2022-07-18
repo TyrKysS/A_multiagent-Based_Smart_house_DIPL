@@ -18,7 +18,7 @@ public class FireAgent extends Agent {
     private AMSAgentDescription[] agents;
     private List<String> listOfAgents;
     private String timer;
-    private int alarmStatus = 0, alarmState = 0, output = 0;
+    private int outputLed = 0, outputAlarm = 0;
     private int[][] matrix;
     @Override
     protected void setup() {
@@ -28,17 +28,17 @@ public class FireAgent extends Agent {
             public void action() {
                 System.out.println(getLocalName()+" is running");
                 try {
-                    matrix = Resources.readMatrixFromFile("FireSettings.txt", 4, 3);
+                    matrix = Resources.readMatrixFromFile("FireSettings.txt", 3, 4);
                     System.out.println("Čtení ze souboru bylo úspěšné");
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                     System.out.println("Soubor s nastavením nebyl nalezen, využívá se výchozí nastavení");
-                    matrix = new int[][]{
-                            // alarmIsOn    alarmIsRinging   output
-                            {   0,               0,              0  },
-                            {   0,               1,              0  },
-                            {   1,               0,              1  },
-                            {   1,               1,              2  }
+                    matrix = new int[][] {
+                            //            senzor plamene          LED        Bzučák
+                            //     vstup_min     vstup_max      výstup      výstup2
+                            {     0,            100,            1,       1000    },
+                            {   100,            300,            1,          0    },
+                            {   300,           1000,            0,          0    }
                     };
                 }
             }
@@ -46,92 +46,61 @@ public class FireAgent extends Agent {
         addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                GregorianCalendar calendar = new GregorianCalendar();
-                int actualHour = calendar.get(Calendar.HOUR);
-                int actualMinutes = calendar.get(Calendar.MINUTE);
-                boolean isTimerOn = false;
-                String actualTime = actualHour+":"+actualMinutes;
-                String btnType, btnStatus;
+                int buzzerValue;
                 ACLMessage msg = receive();
-                if (msg != null){
+                if (msg != null && msg.getContent().contains("Fire")){
                     String[] message = msg.getContent().split(";");
-                    btnType = message[1];
-                    btnStatus = message[2];
-                    switch (btnType){
-                        case "alarmStatus":
-                            alarmStatus = Integer.parseInt(btnStatus);
-                            break;
-                        case "alarmState":
-                            alarmState = Integer.parseInt(btnStatus);
-                            break;
-                        case "event":
-                            timer = btnStatus;
-                            isTimerOn = true;
-                            break;
-                    }
-                    if (isTimerOn && timer.equals(actualTime)){
-                        alarmState = 1;
-                        alarmStatus = 0;
-                    }
+                    buzzerValue = Integer.parseInt(message[1]);
 
                     boolean deviceFound = false;
                     for (int[] ints : matrix) {
                         for (int j = 0; j < ints.length; j++) {
-                            if (ints[0] == alarmState && ints[1] == alarmStatus) {
-                                output = ints[2];
+                            if (ints[0] <= buzzerValue && ints[1] > buzzerValue) {
+                                outputLed = ints[2];
+                                outputAlarm = ints[3];
                                 deviceFound = true;
                                 break;
                             }
                         }
                     }
                     if (deviceFound){
-                        System.out.println(getLocalName()+" output "+output);
+                        System.out.println(getLocalName()+" outputLed "+outputLed);
+                        System.out.println(getLocalName()+" outputAlarm "+outputAlarm);
                         ACLMessage confirmMsg = new ACLMessage(ACLMessage.AGREE);
                         confirmMsg.addReceiver(new AID("Fire", AID.ISLOCALNAME));
-                        confirmMsg.setContent(getLocalName()+";accept;"+output);
+                        confirmMsg.setContent(getLocalName()+";accept;"+outputLed+";"+outputAlarm);
                         send(confirmMsg);
 
-                        sendMessage(String.valueOf(output));
+                        sendMessage(String.valueOf(outputAlarm));
                     }
                 }
             }
         });
     }
-
-    private void sendMessage(String message) {
+    private void sendMessage(String alarmState) {
         listOfAgents = new ArrayList<>();
-
         findAgents();
-        String value = "";
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM); //vytvoření instance ACL zprávy za účelem odeslání zprávy ve formátu INFORM
-        switch (message){
-            case "0":
-            case "1":
-                value = "0";
-                break;
-            case "2":
-                value = "1";
-                break;
-        }
-        msg.setContent(getLocalName()+";fire;"+value);
-        for (AMSAgentDescription agent : agents) {
-            for (Agents typeAgents : Agents.values()) {
-                AID agentID = agent.getName();
-                if (agentID.getLocalName().equals(typeAgents.toString()) && !agentID.getLocalName().equals(getLocalName())){
-                    listOfAgents.add(agentID.getLocalName());
+        if (alarmState.equals("1000")){
+            msg.setContent(getLocalName()+";fire");
+            for (AMSAgentDescription agent : agents) {
+                for (Agents typeAgents : Agents.values()) {
+                    AID agentID = agent.getName();
+                    if (agentID.getLocalName().equals(typeAgents.toString()) && !agentID.getLocalName().equals(getLocalName())){
+                        listOfAgents.add(agentID.getLocalName());
+                    }
                 }
             }
-        }
-        Set<String> finalListOfAgents = new LinkedHashSet<>(listOfAgents);
+            Set<String> finalListOfAgents = new LinkedHashSet<>(listOfAgents);
 
-        System.out.println("finalListOfAgents");
-        for (String agent : finalListOfAgents) {
-            msg.addReceiver(new AID(agent, AID.ISLOCALNAME)); // Přidej příjemce
-            System.out.println(agent);
+            System.out.println("finalListOfAgents");
+            for (String agent : finalListOfAgents) {
+                msg.addReceiver(new AID(agent, AID.ISLOCALNAME)); // Přidej příjemce
+                System.out.println(agent);
+            }
+            send(msg); //rozešli zprávy všem příjemcům
         }
-        send(msg); //rozešli zprávy všem příjemcům
     }
-
     private void findAgents(){
         try {
             SearchConstraints c = new SearchConstraints();
