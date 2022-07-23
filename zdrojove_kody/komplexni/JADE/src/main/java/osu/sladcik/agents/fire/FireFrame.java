@@ -29,7 +29,7 @@ public class FireFrame extends JFrame {
         setTitle("Požární agent");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
-        setSize(340,200);
+        setSize(340,100);
         updateGui();
         output.setOpaque(true);
         output.setBackground(Color.white);

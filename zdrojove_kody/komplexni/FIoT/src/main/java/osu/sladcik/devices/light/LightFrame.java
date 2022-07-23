@@ -64,6 +64,7 @@ public class LightFrame extends JFrame {
                     break;
                 case 2:
                     switchBtn.setText("Přepnout režim - automatický režim");
+                    break;
                 case 3:
                     switchBtn.setText("Přepnout režim - náhodná barva");
                     break;

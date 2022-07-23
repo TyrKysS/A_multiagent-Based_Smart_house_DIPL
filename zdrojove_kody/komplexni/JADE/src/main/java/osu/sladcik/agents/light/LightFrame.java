@@ -33,7 +33,7 @@ public class LightFrame extends JFrame {
 
     LightFrame(){
         setContentPane(panel1);
-        setTitle("Light Agent");
+        setTitle("Světelný Agent");
         setSize(450,150);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
@@ -55,20 +55,28 @@ public class LightFrame extends JFrame {
         });
 
         switchBtn.addActionListener(e -> {
-            if (!(lightState.getText().isEmpty() || lightState.getText().isBlank())){
-                lightState.setText("false");
-                if (lightStatus == 0){
-                    switchBtn.setText("Zapnout");
-                } else {
-                    colorLabel.setBackground(Color.YELLOW);
+            lightStatus++;
+            if (lightStatus == 5)
+                lightStatus = 0;
+            lightState.setText(String.valueOf(lightStatus));
+            switch (lightStatus){
+                case 0:
+                    switchBtn.setText("Zapnout - hlavní žárovka");
+                    break;
+                case 1:
+                    switchBtn.setText("Přepnout režim - LED pásek");
+                    break;
+                case 2:
+                    switchBtn.setText("Přepnout režim - automatický režim");
+                    break;
+                case 3:
+                    switchBtn.setText("Přepnout režim - náhodná barva");
+                    break;
+                case 4:
                     switchBtn.setText("Vypnout");
-                }
-                    lightStatus++;
-                if (lightStatus == 5){
-                    lightStatus = 0;
-                }
-                lightState.setText(String.valueOf(lightStatus));
-                System.out.println("switchBtn "+lightStatus);
+                    break;
+                case 5:
+                    break;
             }
         });
     }

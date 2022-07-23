@@ -8,16 +8,16 @@ import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
 import osu.sladcik.Agents;
+import osu.sladcik.Resources;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.FileNotFoundException;
+import java.util.*;
 
 public class MotionAgent extends Agent {
 
     private AMSAgentDescription[] agents;
     private List<String> listOfAgents;
+    private int actualStatus = 0;
 
     @Override
     protected void setup() {
@@ -30,13 +30,39 @@ public class MotionAgent extends Agent {
                     if (msg.getContent().contains("Motion")){
                         String[] msgArray = msg.getContent().split(";");
                         System.out.println("msgArray");
+                        actualStatus = 1;
+
+                        int[][] matrix;
+                        try {
+                            matrix = Resources.readMatrixFromFile("motionSettings.txt", 2,5);
+                        } catch (FileNotFoundException e) {
+                            System.out.println("Soubor s nastavením nebyl nalezen, využívá se výchozí nastavení");
+
+                            matrix = new int[][]{
+                                    //      pohyb          začátek       konec
+                                    // detekovan pohyb      hodina      hodina     odeslat informaci
+                                    {       0,              7,              8,          0},
+                                    {       1,              9,              20,          1},
+                                    {       1,              20,              7,          0}
+                            };
+                        }
 
                         ACLMessage msgBack = new ACLMessage(ACLMessage.AGREE);
                         msgBack.setContent(getLocalName()+";accept;"+msgArray[2]);
                         msgBack.addReceiver(new AID(msgArray[0], AID.ISLOCALNAME));
                         send(msgBack);
-
-                        sendMessage(msgArray[2]);
+                        GregorianCalendar calendar = new GregorianCalendar();
+                        int actualHour = calendar.get(Calendar.HOUR);
+                        for (int[] ints : matrix) {
+                            for (int j = 0; j < ints.length; j++) {
+                                if (ints[0] == actualStatus && ints[1] < actualHour && ints[2] >= actualHour) {
+                                    if (ints[3] == 1){
+                                        sendMessage(msgArray[2]);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }

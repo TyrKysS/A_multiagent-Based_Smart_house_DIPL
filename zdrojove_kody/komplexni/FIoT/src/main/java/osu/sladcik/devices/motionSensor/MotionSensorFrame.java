@@ -9,6 +9,8 @@ import jade.wrapper.StaleProxyException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class MotionSensorFrame extends JFrame {
     public static boolean notifyAgent = false;
@@ -17,6 +19,7 @@ public class MotionSensorFrame extends JFrame {
     private JButton btn;
     private JPanel panel1;
     private JLabel outputLabel;
+    private JLabel actualTime;
     public int state = 0;
     MotionSensorFrame(){
         setContentPane(panel1);
@@ -47,6 +50,10 @@ public class MotionSensorFrame extends JFrame {
     private void updateGui(){
         Thread thread = new Thread(() -> {
             while (true){
+                GregorianCalendar calendar = new GregorianCalendar();
+                int actualHour = calendar.get(Calendar.HOUR);
+                int actualMinutes = calendar.get(Calendar.MINUTE);
+                actualTime.setText(actualHour+":"+actualMinutes);
                 if (output == 1)
                     outputLabel.setBackground(Color.red);
                 else
