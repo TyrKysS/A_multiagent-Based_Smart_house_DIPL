@@ -40,7 +40,7 @@ public class FireFrame extends JFrame {
 
     }
 
-    // po stisku tlačítka aktualizace GUI
+    // Aktualizace GUI
     private void updateGui() {
         Thread thread = new Thread(() -> {
             int[][] matrix;
@@ -57,6 +57,7 @@ public class FireFrame extends JFrame {
                     {   300,           1000,            0,          0    }
                 };
             }
+            // Prohledávání matice
             while(true){
                 for (int[] ints : matrix) {
                     for (int j = 0; j < ints.length; j++) {
@@ -67,7 +68,8 @@ public class FireFrame extends JFrame {
                         }
                     }
                 }
-
+                
+                // Nastavení barvy LED diody
                 if (getOutputLed() == 1){
                     output.setBackground(Color.red);
                 } else {
