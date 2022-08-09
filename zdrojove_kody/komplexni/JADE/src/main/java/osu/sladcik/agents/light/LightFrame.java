@@ -34,7 +34,7 @@ public class LightFrame extends JFrame {
     LightFrame(){
         setContentPane(panel1);
         setTitle("Světelný Agent");
-        setSize(450,150);
+        setSize(700,150);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
         updateGui();
