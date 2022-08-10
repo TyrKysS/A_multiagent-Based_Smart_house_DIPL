@@ -30,6 +30,8 @@ public class GuiAgent extends Agent {
                     System.out.println(msg.getContent());
                     setFireState(msg.getContent().equals("fire"));
                     setSensorState(msg.getContent().equals("motion"));
+                } else {
+
                 }
                 try {
                     Thread.sleep(1000);

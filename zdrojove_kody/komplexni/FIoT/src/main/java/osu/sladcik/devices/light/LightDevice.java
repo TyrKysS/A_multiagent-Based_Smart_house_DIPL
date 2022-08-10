@@ -39,7 +39,7 @@ public class LightDevice extends Agent {
         msg.setContent(getLocalName()+";"+message);
         msg.addReceiver(new AID(getTargetAgentName(), AID.ISLOCALNAME));
         send(msg);
-        System.out.println("message was send");
+        System.out.println("message was send "+msg.getContent());
     }
     private void recieveFromAgent() {
         ACLMessage msg = receive();

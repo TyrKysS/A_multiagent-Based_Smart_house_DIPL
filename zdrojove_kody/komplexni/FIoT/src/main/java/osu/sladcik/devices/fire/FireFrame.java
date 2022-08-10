@@ -26,7 +26,7 @@ public class FireFrame extends JFrame {
         setTitle("Požární zařízení");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
-        setSize(340,200);
+        setSize(550,70);
         btn.setText("Aktivovat čidlo");
         btn.setText("Nastavit požár");
         output.setOpaque(true);
